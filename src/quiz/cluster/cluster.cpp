@@ -79,16 +79,34 @@ std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<flo
 {
 
 	// TODO: Fill out this function to return list of indices for each cluster
+	std::map<int,bool>processedTag;
+	for(int i=0; i < points.size();i++)
+	{
+		processedTag[i] = false;
+	}
 
 	std::vector<std::vector<int>> clusters;
- 
+
+	for(int i=0; i < points.size();i++)
+	{
+		//
+		if ( !processedTag[i])
+		{
+			std::vector<int>cluster = tree->search(points[i],distanceTol);
+			for ( int idx : cluster)
+			{
+				processedTag[idx] = true;
+			}
+			clusters.push_back(cluster);
+		}
+	}
+
 	return clusters;
 
 }
 
 int main ()
 {
-
 	// Create viewer
 	Box window;
   	window.x_min = -10;
