@@ -124,6 +124,113 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     return segResult;
 }
 
+template<typename PointT>
+std::unordered_set<int> ProcessPointClouds<PointT>::Ransac3d(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol)
+{
+	std::unordered_set<int> inliersResult;
+	srand(time(NULL));
+	// TODO: Fill in this function
+
+	// For max iterations
+	size_t cloudNumPts = cloud->points.size();
+
+	while( maxIterations-- )
+	{
+		std::unordered_set<int> inliersTest;
+		size_t idx1 = rand() % cloudNumPts;
+		size_t idx2 = rand() % cloudNumPts;
+		size_t idx3 = rand() % cloudNumPts;
+
+		// v1 to v2 and v1 to v3
+		double x1 = cloud->points.at(idx1).x;
+		double y1 = cloud->points.at(idx1).y;
+		double z1 = cloud->points.at(idx1).z;
+
+		double x2 = cloud->points.at(idx2).x;
+		double y2 = cloud->points.at(idx2).y;
+		double z2 = cloud->points.at(idx2).z;
+
+		double x3 = cloud->points.at(idx3).x;
+		double y3 = cloud->points.at(idx3).y;
+		double z3 = cloud->points.at(idx3).z;
+
+		// v1 goes from pt1 to pt2
+		double v1x = x2-x1;
+		double v1y = y2-y1;
+		double v1z = z2-z1;
+
+		// v2 goes from pt1 to pt3
+		double v2x = x3-x1;
+		double v2y = y3-y1;
+		double v2z = z3-z1;
+
+		// get cross-prod v1xv2
+		double A = (v1y * v2z) - (v2y*v1z);
+		double B = -1 * ( (v1x * v2z) - (v2x-v1z) );
+		double C = v1x*v2y - v1y*v2x;
+		double D = -1 * (x1*A + y1*B + z1*C);
+
+		for ( size_t j=0; j < cloud->points.size() ; j++)
+		{
+			if  ( j == idx1 || j == idx2 || j== idx3 )
+			{
+				continue;
+			}
+			double px = cloud->points.at(j).x;
+			double py = cloud->points.at(j).y;
+			double pz = cloud->points.at(j).z;
+
+			double cVal = sqrt(A*A + B*B + C*C);
+			// don't divide by 0
+			if (cVal < .000001)
+			{
+				continue;
+			}
+
+			double distToLine = fabs( A*px + B*py + C*pz + D ) / cVal;
+
+			if ( distToLine < distanceTol)
+			{
+				inliersTest.insert(j);
+			}
+		}
+		if ( inliersTest.size() > inliersResult.size() )
+		{
+			inliersResult = inliersTest;
+		}
+	}
+	// CHECK Randomly sample subset and fit line
+	// Measure distance between every point and fitted line
+	// If distance is smaller than threshold count it as inlier
+	return inliersResult;
+}
+
+template <typename PointT>
+std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::getPlaneAndOtherPcPoints(typename pcl::PointCloud<PointT>::Ptr aCloud,std::unordered_set<int> aInliers)
+{
+	typename pcl::PointCloud<PointT>::Ptr  cloudInliers(new typename pcl::PointCloud<PointT>());
+	typename pcl::PointCloud<PointT>::Ptr cloudOutliers(new typename pcl::PointCloud<PointT>());
+
+	for(int index = 0; index < aCloud->points.size(); index++)
+	{
+		PointT point = aCloud->points[index];
+		if(aInliers.count(index))
+			cloudInliers->points.push_back(point);
+		else
+			cloudOutliers->points.push_back(point);
+	}
+
+	typename std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> res(cloudOutliers,cloudInliers);
+	return res;
+}
+
+template<typename PointT>
+std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SegmentPlaneRansac3D(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceThreshold)
+{
+	std::unordered_set<int> resIdxPlane = Ransac3d(cloud, maxIterations, distanceThreshold);
+	typename std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> clustersPlanePair = getPlaneAndOtherPcPoints(cloud,resIdxPlane);
+	return clustersPlanePair;
+}
 
 template<typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
