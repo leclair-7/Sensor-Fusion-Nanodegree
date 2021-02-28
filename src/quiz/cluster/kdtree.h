@@ -1,6 +1,9 @@
 /* \author Aaron Brown */
 // Quiz on implementing kd tree
 
+#ifndef KHTREE_H
+#define KHTREE_H
+
 #include "../../render/render.h"
 #include <cmath>
 
@@ -35,6 +38,15 @@ struct Node
 		}
 		return point[1];
 	}
+	float z()
+	{
+		if (point.empty() || point.size() < 3 )
+		{
+			std::cout << "empty node, returning\n";
+			return -1;
+		}
+		return point[2];
+	}
 };
 
 struct KdTree
@@ -65,7 +77,7 @@ struct KdTree
 	void insertHelper(Node * apNode, Node * treeNodeToCompare, int depth)
 	{
 
-		int splitOn(depth%2);
+		int splitOn(depth%3);
 		if ( splitOn == 0)
 		{
 			//compare x
@@ -93,10 +105,36 @@ struct KdTree
 				}
 			}
 		}
-		else
+		else if ( splitOn == 1)
 		{
 			//compare y
 			if ( apNode->y() > treeNodeToCompare->y()  )
+			{
+				if ( treeNodeToCompare->right )
+				{
+					insertHelper(apNode,treeNodeToCompare->right,depth+1);
+				}
+				else
+				{
+					treeNodeToCompare->right = apNode;
+				}
+			}
+			else
+			{
+				if ( treeNodeToCompare->left )
+				{
+					insertHelper(apNode,treeNodeToCompare->left,depth+1);
+				}
+				else
+				{
+					treeNodeToCompare->left = apNode;
+				}
+			}
+		}
+		else
+		{
+			//compare y
+			if ( apNode->z() > treeNodeToCompare->z()  )
 			{
 				if ( treeNodeToCompare->right )
 				{
@@ -133,24 +171,24 @@ struct KdTree
 		if (pNodeTest)
 		{
 			if( pNodeTest->x() >= (target[0]-distanceTol)&&(pNodeTest->x()<=(target[0]+distanceTol))
-			 && pNodeTest->y() >= (target[1]-distanceTol)&&(pNodeTest->y()<=(target[1]+distanceTol)) )
+			 && pNodeTest->y() >= (target[1]-distanceTol)&&(pNodeTest->y()<=(target[1]+distanceTol))
+			 && pNodeTest->z() >= (target[2]-distanceTol)&&(pNodeTest->z()<=(target[2]+distanceTol)) )
 			 {
-				float dist = sqrt(pow(pNodeTest->x() -target[0],2) + pow(pNodeTest->y()-target[1],2));
+				float dist = sqrt(pow(pNodeTest->x()-target[0],2) + pow(pNodeTest->y()-target[1],2) + pow(pNodeTest->z()-target[2],2));
 				if ( dist < distanceTol)
 				{
 					ids.push_back(pNodeTest->id);
 				}
 			 }
 
-			if ( (target[depth%2] - distanceTol)<pNodeTest->point[depth%2])
+			if ( (target[depth%3] - distanceTol)<pNodeTest->point[depth%3])
 			{
 				searchHelper(target,pNodeTest->left,distanceTol,depth+1,ids);
 			}
-			if ( (target[depth%2] + distanceTol)>pNodeTest->point[depth%2])
+			if ( (target[depth%3] + distanceTol)>pNodeTest->point[depth%3])
 			{
 				searchHelper(target,pNodeTest->right,distanceTol,depth+1,ids);
 			}
-
 		}
 	}
 	
@@ -158,6 +196,6 @@ struct KdTree
 
 };
 
-
+#endif // KHTREE_H
 
 

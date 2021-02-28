@@ -31,7 +31,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData(std::vector<std::vector<float>> p
   		pcl::PointXYZ point;
   		point.x = points[i][0];
   		point.y = points[i][1];
-  		point.z = 0;
+  		point.z = points[i][2];
 
   		cloud->points.push_back(point);
 
@@ -70,12 +70,10 @@ void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Bo
 		render2DTree(node->left,viewer, lowerWindow, iteration, depth+1);
 		render2DTree(node->right,viewer, upperWindow, iteration, depth+1);
 	}
-
 }
 
 std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
 {
-
 	// TODO: Fill out this function to return list of indices for each cluster
 	std::map<int,bool>processedTag;
 	for(int i=0; i < points.size();i++)
@@ -98,9 +96,7 @@ std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<flo
 			clusters.push_back(cluster);
 		}
 	}
-
 	return clusters;
-
 }
 
 int main ()
@@ -116,8 +112,11 @@ int main ()
 	pcl::visualization::PCLVisualizer::Ptr viewer = initScene(window, 25);
 
 	// Create data
-	std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3}, {7.2,6.1}, {8.0,5.3}, {7.2,7.1}, {0.2,-7.1}, {1.7,-6.9}, {-1.2,-7.2}, {2.2,-8.9} };
-	//std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3} };
+	//std::vector<std::vector<float>> points = { {-6.2,7,-2}, {-6.3,8.4,-2}, {-5.2,7.1,-2}, {-5.7,6.3,-2}, {7.2,6.1,-2}, {8.0,5.3,2}, {7.2,7.1,1.2}, {0.2,-7.1,2}, {1.7,-6.9,3}, {-1.2,-7.2,2}, {2.2,-8.9,2} };
+	std::vector<std::vector<float>> points = { {-6,-6,-2}, {-6.3,-6.3,-2}, {-6.2,-7.1,-2},
+											   {6,-6,2}, {6.3,-6.3,2}, {6.7,-7.1,2},
+	                                           {7,8,2}, {6.3,6.3, 2}, {6.2,7.1,1.7} };
+
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData(points);
 
 	KdTree* tree = new KdTree;
@@ -129,7 +128,7 @@ int main ()
   	render2DTree(tree->root,viewer,window, it);
   
   	std::cout << "Test Search" << std::endl;
-  	std::vector<int> nearby = tree->search({-6,7},3.0);
+  	std::vector<int> nearby = tree->search({-6,7,-2},1.0);
   	for(int index : nearby)
       std::cout << index << ",";
   	std::cout << std::endl;
@@ -137,7 +136,7 @@ int main ()
   	// Time segmentation process
   	auto startTime = std::chrono::steady_clock::now();
   	//
-  	std::vector<std::vector<int>> clusters = euclideanCluster(points, tree, 3.0);
+  	std::vector<std::vector<int>> clusters = euclideanCluster(points, tree, 2.0);
   	//
   	auto endTime = std::chrono::steady_clock::now();
   	auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -150,7 +149,7 @@ int main ()
   	{
   		pcl::PointCloud<pcl::PointXYZ>::Ptr clusterCloud(new pcl::PointCloud<pcl::PointXYZ>());
   		for(int indice: cluster)
-  			clusterCloud->points.push_back(pcl::PointXYZ(points[indice][0],points[indice][1],0));
+  			clusterCloud->points.push_back(pcl::PointXYZ(points[indice][0],points[indice][1],points[indice][2]));
   		renderPointCloud(viewer, clusterCloud,"cluster"+std::to_string(clusterId),colors[clusterId%3]);
   		++clusterId;
   	}

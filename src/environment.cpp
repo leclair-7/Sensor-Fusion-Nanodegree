@@ -7,6 +7,7 @@
 #include "processPointClouds.h"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
+#include "./quiz/cluster/kdtree.h"
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
@@ -90,7 +91,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
 	renderPointCloud(viewer,res.first,"obstCloud",Color(1,0,0));
 	renderPointCloud(viewer,res.second,"planeCloud",Color(0,1,0));
 
-	std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(res.first, 1.0, 25, 50000);
+	//std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(res.first, 1.0, 25, 50000);
+	std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->ClusteringKDTree(res.first, 3.0, 25, 50000);
 	int clusterId = 0;
 	// red, yellow, cyan
 	std::vector<Color> colors = {Color(1,0,0), Color(1,1,0), Color(0,1,1)};
@@ -114,7 +116,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
 void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
     viewer->setBackgroundColor (0, 0, 0);
-    
+
     // set camera position and angle
     viewer->initCameraParameters();
     // distance away in meters

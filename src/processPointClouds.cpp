@@ -208,6 +208,8 @@ std::unordered_set<int> ProcessPointClouds<PointT>::Ransac3d(typename pcl::Point
 template <typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::getPlaneAndOtherPcPoints(typename pcl::PointCloud<PointT>::Ptr aCloud,std::unordered_set<int> aInliers)
 {
+	KdTree* tree = new KdTree;
+
 	typename pcl::PointCloud<PointT>::Ptr  cloudInliers(new typename pcl::PointCloud<PointT>());
 	typename pcl::PointCloud<PointT>::Ptr cloudOutliers(new typename pcl::PointCloud<PointT>());
 
@@ -233,9 +235,42 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 }
 
 template<typename PointT>
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::ClusteringKDTree(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
+{
+	KdTree* tree = new KdTree;
+
+	std::vector<std::vector<float>>pts3dCoords;
+	for (int i=0; i<cloud->points.size(); i++)
+	{
+		std::vector<float> pt3d = {cloud->points[i].x,cloud->points[i].y,cloud->points[i].z};
+		pts3dCoords.push_back(pt3d);
+		tree->insert(pt3d,i);
+	}
+
+	std::vector<std::vector<int>> clusters = euclideanCluster(pts3dCoords, tree, clusterTolerance);
+
+	std::vector<typename pcl::PointCloud<PointT>::Ptr> clusterPcsVec;
+
+	for(std::vector<int> cluster : clusters)
+	{
+		typename pcl::PointCloud<PointT>::Ptr clusterCloud(new pcl::PointCloud<PointT>());
+		for(int indice: cluster)
+		{
+			pcl::PointXYZI pt4f;
+			pt4f.x = cloud->points[indice].x;
+			pt4f.y = cloud->points[indice].y;
+			pt4f.z = cloud->points[indice].z;
+			pt4f.intensity = 1;
+			clusterCloud->points.push_back(pt4f);
+		}
+
+		clusterPcsVec.push_back(clusterCloud);
+	}
+	return clusterPcsVec;
+}
+template<typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
 {
-
     // Time clustering process
     auto startTime = std::chrono::steady_clock::now();
 
@@ -272,6 +307,36 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
     return clusters;
 }
+
+template<typename PointT>
+std::vector<std::vector<int>> ProcessPointClouds<PointT>::euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
+{
+	// TODO: Fill out this function to return list of indices for each cluster
+	std::map<int,bool>processedTag;
+	for(int i=0; i < points.size();i++)
+	{
+		processedTag[i] = false;
+	}
+
+	std::vector<std::vector<int>> clusters;
+
+	for(int i=0; i < points.size();i++)
+	{
+		//
+		if ( !processedTag[i])
+		{
+			std::vector<int>cluster = tree->search(points[i],distanceTol);
+			for ( int idx : cluster)
+			{
+				processedTag[idx] = true;
+			}
+			clusters.push_back(cluster);
+		}
+	}
+	return clusters;
+}
+
+
 
 
 template<typename PointT>
