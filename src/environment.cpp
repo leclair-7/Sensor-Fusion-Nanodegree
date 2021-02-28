@@ -83,8 +83,9 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
 	pcl::PointCloud<pcl::PointXYZI>::Ptr outputCloud = pointProcessorI->FilterCloud(inputCloud, 0.15, Eigen::Vector4f(-10,-5,-4,1),Eigen::Vector4f(30,5,4,1));
 
 	int iterations = 100;
-	float distThresh = .1;
-	std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> res = pointProcessorI->SegmentPlane(outputCloud, iterations,distThresh);
+	float distThresh = .25;
+	std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> res = pointProcessorI->SegmentPlaneRansac3D(outputCloud, iterations,distThresh);
+	//std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> res = pointProcessorI->SegmentPlane(outputCloud, iterations,distThresh);
 
 	renderPointCloud(viewer,res.first,"obstCloud",Color(1,0,0));
 	renderPointCloud(viewer,res.second,"planeCloud",Color(0,1,0));
