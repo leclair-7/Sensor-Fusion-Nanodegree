@@ -214,6 +214,22 @@ std::unordered_set<int> Ransac3d(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int 
 	return inliersResult;
 }
 
+std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr,pcl::PointCloud<pcl::PointXYZ>::Ptr> getPlaneAndOtherPcPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr aCloud,std::unordered_set<int> aInliers)
+{
+	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers(new pcl::PointCloud<pcl::PointXYZ>());
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers(new pcl::PointCloud<pcl::PointXYZ>());
+
+	for(int index = 0; index < aCloud->points.size(); index++)
+	{
+		pcl::PointXYZ point = aCloud->points[index];
+		if(aInliers.count(index))
+			cloudInliers->points.push_back(point);
+		else
+			cloudOutliers->points.push_back(point);
+	}
+
+	return std::make_pair(cloudInliers,cloudOutliers);
+}
 
 int main ()
 {
@@ -226,18 +242,10 @@ int main ()
 	// TODO: Change the max iteration and distance tolerance arguments for Ransac function
 	std::unordered_set<int> inliers = Ransac3d(cloud, 50, .50);
 
-	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers(new pcl::PointCloud<pcl::PointXYZ>());
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers(new pcl::PointCloud<pcl::PointXYZ>());
+	std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr,pcl::PointCloud<pcl::PointXYZ>::Ptr> inOutliers = getPlaneAndOtherPcPoints(cloud, inliers);
 
-	for(int index = 0; index < cloud->points.size(); index++)
-	{
-		pcl::PointXYZ point = cloud->points[index];
-		if(inliers.count(index))
-			cloudInliers->points.push_back(point);
-		else
-			cloudOutliers->points.push_back(point);
-	}
-
+	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers = inOutliers.first;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers = inOutliers.second;
 
 	// Render 2D point cloud with inliers and outliers
 	if(inliers.size())
