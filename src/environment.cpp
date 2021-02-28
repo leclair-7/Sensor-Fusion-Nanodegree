@@ -78,7 +78,6 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     }
 }
 
-//void CityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
 void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, const pcl::PointCloud<pcl::PointXYZI>::Ptr& inputCloud)
 {
 	pcl::PointCloud<pcl::PointXYZI>::Ptr outputCloud = pointProcessorI->FilterCloud(inputCloud, 0.15, Eigen::Vector4f(-10,-5,-4,1),Eigen::Vector4f(30,5,4,1));
@@ -109,6 +108,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
 		++clusterId;
 	}
 }
+
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
 void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
@@ -131,13 +131,12 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
     	viewer->addCoordinateSystem (1.0);
 }
 
-
 int main (int argc, char** argv)
 {
     std::cout << "starting enviroment" << std::endl;
 
     pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    CameraAngle setAngle = XY;
+    CameraAngle setAngle = FPS;
     initCamera(setAngle, viewer);
     //CityBlock(viewer);
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();

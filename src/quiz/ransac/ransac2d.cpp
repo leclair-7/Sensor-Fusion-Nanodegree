@@ -134,7 +134,6 @@ std::unordered_set<int> Ransac2d(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int 
 	return inliersResult;
 }
 
-
 std::unordered_set<int> Ransac3d(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int maxIterations, float distanceTol)
 {
 	std::unordered_set<int> inliersResult;
@@ -197,7 +196,7 @@ std::unordered_set<int> Ransac3d(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int 
 				continue;
 			}
 
-			double distToLine = fabs( A*px + B*py + C*pz + D) / cVal;
+			double distToLine = fabs( A*px + B*py + C*pz + D ) / cVal;
 
 			if ( distToLine < distanceTol)
 			{
@@ -218,7 +217,6 @@ std::unordered_set<int> Ransac3d(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int 
 
 int main ()
 {
-
 	// Create viewer
 	pcl::visualization::PCLVisualizer::Ptr viewer = initScene();
 
